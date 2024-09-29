@@ -5,7 +5,7 @@ import Slidebar from "@/components/Slidebar";
 import News from "@/components/News";
 import SessionWrapper from "@/components/SectionWrapper";
 import Provider from "./Provider";
-
+import CommentModel from "@/components/commentModel"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -55,6 +55,7 @@ export default function RootLayout({
                 <News />
               </div>
             </div>
+            <CommentModel/>
           </Provider>
         </body>
       </html>

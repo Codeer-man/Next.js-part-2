@@ -5,6 +5,7 @@ import { HiOutlinePhotograph } from "react-icons/hi";
 import { useRef, useState, useEffect, ChangeEvent } from "react";
 import { app } from "../firebase";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { addDoc, collection, getFirestore, serverTimestamp } from "firebase/firestore";
 
 export default function Input() {
     const { data: session } = useSession();
@@ -12,7 +13,9 @@ export default function Input() {
     const [ImageFileLoading, setImageFileLoading] = useState<boolean>(false);
     const [ImageFileURL, setImageFileURL] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null); // Type as File or null
-    const [inputText, setInputText] = useState<string>(""); // String type for input
+    const [text, setText] = useState<string>(""); // String type for input text
+    const [postLoading, setPostLoading] = useState(false);
+    const db = getFirestore(app);
 
     const addImage = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]; // Use optional chaining to handle undefined
@@ -57,6 +60,33 @@ export default function Input() {
         );
     };
 
+    const handleSubmit = async () => {
+        if (!session) return;
+
+        setPostLoading(true);
+
+        try {
+           
+            await addDoc(collection(db, "posts"), {
+                uid: session.user?.email, 
+                name: session.user?.name,
+                text: text,
+                profileImg: session.user?.image,
+                image: ImageFileURL,
+                timestamp: serverTimestamp(), 
+            });
+
+            setPostLoading(false);
+            setText("");
+            setImageFileURL(null);
+            setSelectedFile(null);
+            location.reload();
+        } catch (error) {
+            console.error("Error adding document: ", error);
+            setPostLoading(false);
+        }
+    };
+
     if (!session) return null;
 
     return (
@@ -70,8 +100,8 @@ export default function Input() {
                 <textarea
                     placeholder="What's Happening?"
                     rows={2}
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
+                    value={text} // Use the unified `text` state
+                    onChange={(e) => setText(e.target.value)}
                     className="w-full border-none outline-none tracking-wide min-h-[50px] text-gray-799"
                 ></textarea>
                 {selectedFile && (
@@ -94,10 +124,11 @@ export default function Input() {
                         hidden
                     />
                     <button
-                        disabled={ImageFileLoading || (!inputText && !selectedFile)}
+                        disabled={ImageFileLoading || (!text && !selectedFile) || postLoading} // Disable while uploading
                         className="bg-blue-500 text-white px-3 py-1.5 rounded-full font-bold shadow-md hover:brightness-95 disabled:opacity-50"
+                        onClick={handleSubmit}
                     >
-                        {ImageFileLoading ? "Uploading..." : "Post"}
+                        {postLoading || ImageFileLoading ? "Posting..." : "Post"}
                     </button>
                 </div>
             </div>

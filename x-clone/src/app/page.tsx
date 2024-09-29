@@ -1,5 +1,6 @@
 
 import Input from "@/components/Input"
+import Feed from "@/components/feed"
 import ThemeChanger from "./ThemeChanger"
 
 export default function Home() {
@@ -14,6 +15,7 @@ export default function Home() {
         </h2>
       </div>
       <Input />
+      <Feed/>
     </div>
   );
 }
